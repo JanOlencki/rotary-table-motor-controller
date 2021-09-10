@@ -1,14 +1,16 @@
 #ifndef __UART_H__
 #define __UART_H__
+#include "common.h"
 
-#include "iostm8l101k3.h"
+#define UART_RX_BUFFER_LENGTH (6)
+#define UART_TX_BUFFER_LENGTH (9)
 
-extern int uartRxBuffer[6];
-extern int uartRxBufferCount;
-extern int uartRxNewDataFlag;
-extern int uartTxBuffer[9];
-extern int uartTxBufferCount;
-extern int uartTxCompletedFlag;
+extern uint8_t uartRxBuffer[UART_RX_BUFFER_LENGTH];
+extern uint8_t uartRxBufferCount;
+extern uint8_t uartRxNewDataFlag;
+extern uint8_t uartTxBuffer[UART_TX_BUFFER_LENGTH];
+extern uint8_t uartTxBufferCount;
+extern uint8_t uartTxCompletedFlag;
 
 void uartInit();
 void uartRxOn();

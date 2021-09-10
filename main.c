@@ -1,18 +1,22 @@
-#include "iostm8l101k3.h"
+#include "common.h"
 #include "gpio.h"
 #include "motor.h"
 #include "uart.h"
+
 
 int main(void)
 {
   gpioInit();
   motInit();
   uartInit();
-  enableInterrupts();
+  __enable_interrupt();
   
-  LED_ODR = 0;
+  LED_ODR = 1;
   while(1) {
+    delay(500000);
+    if(uartRxNewDataFlag && uartRxBufferCount == 0) {
+      delay(100);
+    }
     //motMoveSteps(4*5);
-    LED_ODR = ~LED_ODR;
   }
 }
