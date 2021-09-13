@@ -2,21 +2,68 @@
 #include "gpio.h"
 #include "motor.h"
 #include "uart.h"
+#include "communication.h"
 
+uint8_t readCfgAddress();
+Status status = 0;
+uint8_t cfg_address = 0;
+volatile MotorSettings motor = {0};
+RequestFrame lastReq;
 
 int main(void)
 {
   gpioInit();
+  cfg_address = readCfgAddress();
   motInit();
   uartInit();
+  uartRxOn();
   __enable_interrupt();
   
   LED_ODR = 1;
   while(1) {
-    delay(500000);
-    if(uartRxNewDataFlag && uartRxBufferCount == 0) {
-      delay(100);
+    if(uartRxNewDataFlag && uartRxBufferCount == REQUEST_FRAME_LENGTH) {
+      if(isFrameValid(uartRxBuffer)) {
+        SET_STATUS_CRC_VALID(status);
+        parseRequest(uartRxBuffer, &lastReq);
+        if(lastReq.address == cfg_address) {
+          uartTxOn();
+          __disable_interrupt();
+          if(lastReq.command == REQUEST_COMMAND_HALT) {            
+//            motor.target_angle = motor.current_angle;
+//            motor.speed = 0;            
+//            motor.is_enabled = 1;
+          } else if(lastReq.command == REQUEST_COMMAND_DISABLE) {
+//            motor.is_enabled = 0;
+          } else if(lastReq.command == REQUEST_COMMAND_SET_HOME) {
+//            motor.target_angle = 0;
+//            motor.current_angle = 0;            
+          } else if(lastReq.command == REQUEST_COMMAND_ROTATE) {
+          }
+          __enable_interrupt();
+          uint8_t resp[RESPONSE_FRAME_LENGTH] = {0};
+          createResponse(resp, motor, &status, &cfg_address);
+          uartSend(resp, RESPONSE_FRAME_LENGTH);
+        } else {
+          LED_ODR = 1;
+        }
+      } else {
+        RESET_STATUS_CRC_VALID(status);
+        LED_ODR = 1;
+      }
+      uartRxNewDataFlag = 0;
+      uartRxBufferCount = 0;
     }
-    //motMoveSteps(4*5);
+    if(uartTxCompletedFlag) {      
+      uartRxOn();
+      LED_ODR = 1;
+      uartTxCompletedFlag = 0;
+    }
   }
+}
+
+uint8_t readCfgAddress() {
+  uint8_t addr = 0x3;
+  addr &= CFG_ID0_IDR;
+  addr &= CFG_ID1_IDR<<1;
+  return addr;
 }

@@ -4,5 +4,6 @@
 #include "iostm8l101k3.h"
 #include <intrinsics.h>
 #include <stdint.h>
+#include <string.h>
 
 #endif
