@@ -23,7 +23,7 @@ void motTimerHalt() {
 
 void motTimerInit() {
   CLK_PCKENR |= PCKEN0;
-  TIM2_PSCR = 0x7; // PRESCALER=128, F_CLK=125kHz
+  TIM2_PSCR = 0x6; // PRESCALER=64, F_CLK=250kHz
   TIM2_ARRH = 0x20;
   TIM2_ARRL = 0x00;
   TIM2_CCR1H = 0x0;
@@ -41,13 +41,15 @@ void motTimerInit() {
 void motUpdate(volatile MotorSettings *motor) {
   MOT_ENn_ODR = !motor->is_enabled;
   MOT_DIR_ODR = motor->speed > 0;
-  if(motor->speed > 0) {
-    TIM2_ARRH = (uint8_t) motor->speed;
-  } else {
-    TIM2_ARRH = (uint8_t) (-motor->speed);
-  }
-  TIM2_ARRL = 0;
   if(motor->is_enabled && motor->speed != 0 && motor->current_angle != motor->target_angle) {
+    uint32_t speed = motor->speed;
+    if(motor->speed < 0) {
+      speed = (uint8_t) (-motor->speed);
+    }
+    speed = MOTOR_SPEED_TO_TIMER/speed;
+    TIM2_ARRH = (uint8_t) (speed>>8);
+    TIM2_ARRL = (uint8_t) speed;
+    
     motor->is_rotating = 1;
     if(!TIM2_CR1_bit.CEN) {
       TIM2_CR1_bit.CEN = 1;
@@ -64,12 +66,13 @@ void motUpdate(volatile MotorSettings *motor) {
 __interrupt void motTimerCC(void) {
   TIM2_SR1_bit.CC1IF = 0;  
   if(MOT_STEP_IDR) {
-    uint32_t angle = motor.current_angle + MOTOR_ANGLE_MAX;
+    uint32_t angle = motor.current_angle;
     if(motor.speed > 0) {
       angle += MOTOR_ANGLE_STEP;
     } else {
       angle -= MOTOR_ANGLE_STEP;
     }
+    angle += MOTOR_ANGLE_MAX;
     angle %= MOTOR_ANGLE_MAX;
     motor.current_angle = (uint16_t) angle;
     if(motor.current_angle == motor.target_angle) {

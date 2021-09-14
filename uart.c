@@ -1,5 +1,6 @@
 #include "uart.h"
 #include "gpio.h"
+#include "communication.h"
 
 #define CLEAR_USART_TC_FLAG() asm("BRES 0x5230, #6")
 //#define CLEAR_USART_TC_FLAG() (1) 
@@ -23,6 +24,15 @@ void uartInit() {
   uartRxNewDataFlag = 0;
   uartTxBufferCount = 0;
   uartTxCompletedFlag = 0;
+}
+void uartTimerInit() {
+  CLK_PCKENR |= PCKEN1;
+  TIM3_PSCR = 0x2; // PRESCALER=4, F_CLK=4MHz
+  TIM3_ARRH = 0x20;
+  TIM3_ARRL = 0x00;
+  TIM3_CR1_bit.URS = 1;
+  TIM3_IER_bit.UIE = 1;
+  TIM3_CR1_bit.CEN = 1;
 }
 void uartSend(uint8_t data[], uint8_t data_length) {
   USART_CR2_bit.TCIEN = 0;
@@ -48,7 +58,10 @@ __interrupt void uartRXEHandler(void) {
   uartRxBuffer[bufferIndex] = USART_DR;
   uartRxNewDataFlag = 1;
   uartRxBufferCount = (uartRxBufferCount + 1) % (UART_RX_BUFFER_LENGTH + 1);
-  LED_ODR = 0;
+  if(uartRxBufferCount == 1) {
+    LED_ODR = 0;
+  }
+  TIM3_EGR_bit.UG = 1;
 }
 
 #pragma vector = USART_T_TC_vector
@@ -59,5 +72,14 @@ __interrupt void uartTCHandler(void) {
   } else {
     uartTxBufferCount--;
     USART_DR = uartTxBuffer[UART_TX_BUFFER_LENGTH - uartTxBufferCount];
+  }
+}
+
+#pragma vector = TIM3_OVR_UIF_vector
+__interrupt void uartTimer3OvrHandler(void) {
+  TIM3_SR1_bit.UIF = 0;
+  if(!uartRxNewDataFlag && uartRxBufferCount > 0) {
+    uartRxBufferCount = 0;
+    LED_ODR = 1;
   }
 }

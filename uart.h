@@ -13,6 +13,7 @@ volatile extern uint8_t uartTxBufferCount;
 volatile extern uint8_t uartTxCompletedFlag;
 
 void uartInit();
+void uartTimerInit();
 void uartSend(uint8_t data[], uint8_t data_length);
 void uartRxOn();
 void uartTxOn();
