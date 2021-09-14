@@ -14,7 +14,11 @@ void parseRequest(uint8_t data[], RequestFrame *req) {
   req->command = data[1] & 0xF;
   memcpy(&req->payload, &data[2], sizeof(req->payload));
 }
-void updateMotorTarget(MotorSettings *motor, RequestFrame *req) {
+void updateMotorTargetAndSpeed(volatile MotorSettings *motor, RequestFrame *req) {
+  motor->target_angle = ((uint16_t)req->payload[0] << 8) | req->payload[1];
+  motor->target_angle %= MOTOR_ANGLE_MAX;
+  motor->target_angle &= MOTOR_ANGLE_STEP_PREC_MASK;
+  motor->speed = req->payload[2];
 }
 
 void createResponse(uint8_t resp[], MotorSettings motor, Status *status, uint8_t *addr) {
@@ -26,6 +30,11 @@ void createResponse(uint8_t resp[], MotorSettings motor, Status *status, uint8_t
     SET_STATUS_ENABLED(resp[2]);
   } else {
     RESET_STATUS_ENABLED(resp[2]);
+  }
+  if(motor.is_rotating) {
+    SET_STATUS_ROTATING(resp[2]);
+  } else {
+    RESET_STATUS_ROTATING(resp[2]);
   }
   memcpy(&resp[3], &motor.current_angle, sizeof(motor.current_angle));
   memcpy(&resp[5], &motor.target_angle, sizeof(motor.target_angle));
@@ -39,8 +48,8 @@ uint8_t calcCRC8(uint8_t data[], uint8_t len) {
   for (j = len; j; j--, data++) {
     crc ^= (*data << 8);
     for (i = 8; i; i--) {
-      if (crc & 0x8000)
-        crc ^= (0x1070 << 3);
+      if (crc & 0x8000u)
+        crc ^= (0x1070u << 3);
       crc <<= 1;
     }
   }

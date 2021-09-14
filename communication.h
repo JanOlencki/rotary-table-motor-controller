@@ -39,7 +39,7 @@ typedef uint8_t Status;
 
 uint8_t isFrameValid(uint8_t data[]);
 void parseRequest(uint8_t data[], RequestFrame *req);
-void updateMotorTarget(MotorSettings *motor, RequestFrame *req);
+void updateMotorTargetAndSpeed(volatile MotorSettings *motor, RequestFrame *req);
 void createResponse(uint8_t resp[], MotorSettings motor, Status *status, uint8_t *addr);
 uint8_t calcCRC8(uint8_t data[], uint8_t len);
                                        

@@ -13,6 +13,14 @@
 #define PCKEN2          (1<<2)
 #define PCKEN1          (1<<1)
 #define PCKEN0          (1<<0)
+#define TIMx_CCMRx_OCxM_FROZEN          (0x0)
+#define TIMx_CCMRx_OCxM_SET_ACTIVE      (0x1)
+#define TIMx_CCMRx_OCxM_SET_INACTIVE    (0x2)
+#define TIMx_CCMRx_OCxM_TOGGLE          (0x3)
+#define TIMx_CCMRx_OCxM_FORCE_INACTIVE  (0x4)
+#define TIMx_CCMRx_OCxM_FORCE_ACTIVE    (0x5)
+#define TIMx_CCMRx_OCxM_FORCE_PWM1      (0x6)
+#define TIMx_CCMRx_OCxM_FORCE_PWM2      (0x7)
 
 #define MOT_STEP_ODR    PB_ODR_bit.ODR0
 #define MOT_ENn_ODR     PB_ODR_bit.ODR4
@@ -62,6 +70,7 @@
 #define CFG_ID0_CR1     PC_CR1_bit.C10
 #define CFG_ID1_CR1     PC_CR1_bit.C11
 
+#define MOT_STEP_IDR    PB_IDR_bit.IDR0
 #define MOT_HOMEn_IDR   PB_IDR_bit.IDR6
 #define LED_IDR         PD_IDR_bit.IDR0
 #define USART_RX_IDR    PC_IDR_bit.IDR2
