@@ -76,8 +76,6 @@ int main(void)
 }
 
 uint8_t readCfgAddress() {
-  uint8_t addr = 0x3;
-  addr &= CFG_ID0_IDR;
-  addr &= CFG_ID1_IDR<<1;
+  uint8_t addr = 0x0;
   return addr;
 }
