@@ -5,6 +5,7 @@
 #include "motor.h"
 
 #define PREAMBLE (0x5D)
+#define REQUEST_ADDRESS_BROADCAST (0xF)
 #define REQUEST_COMMAND_GET_STATUS (0x0)
 #define REQUEST_COMMAND_SET_HOME (0x1)
 #define REQUEST_COMMAND_HALT (0x2)

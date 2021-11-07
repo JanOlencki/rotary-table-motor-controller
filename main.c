@@ -29,9 +29,10 @@ int main(void)
         if(isFrameValid(uartRxBuffer)) {
           SET_STATUS_CRC_VALID(status);
           parseRequest(uartRxBuffer, &lastReq);
-          if(lastReq.address == cfg_address) {
-            //TODO: Add broadcast support
-            uartTxOn();
+          if(lastReq.address == cfg_address || lastReq.address == REQUEST_ADDRESS_BROADCAST) {
+            if(lastReq.address != REQUEST_ADDRESS_BROADCAST) {
+              uartTxOn();              
+            }
             __disable_interrupt();
             if(lastReq.command == REQUEST_COMMAND_HALT) {            
               motor.target_angle = motor.current_angle;
@@ -54,9 +55,13 @@ int main(void)
             }
             __enable_interrupt();
             motUpdate(&motor);
-            uint8_t resp[RESPONSE_FRAME_LENGTH] = {0};
-            createResponse(resp, motor, &status, &cfg_address);
-            uartSend(resp, RESPONSE_FRAME_LENGTH);
+            if(lastReq.address != REQUEST_ADDRESS_BROADCAST) {
+              uint8_t resp[RESPONSE_FRAME_LENGTH] = {0};
+              createResponse(resp, motor, &status, &cfg_address);
+              uartSend(resp, RESPONSE_FRAME_LENGTH);
+            } else {
+              LED_ODR = 1;
+            }
           } else {
             LED_ODR = 1;
           }
