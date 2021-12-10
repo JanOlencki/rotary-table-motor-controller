@@ -1,2 +1,7 @@
 Debug/
 *.Debug*
+settings/
+*.dep
+*.ewd
+*.ewp
+*.ewt
